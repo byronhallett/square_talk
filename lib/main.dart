@@ -5,8 +5,9 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:google_fonts/google_fonts.dart';
 import 'package:fullscreen/fullscreen.dart';
-
+import 'package:segment_display/segment_display.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
         primarySwatch: Colors.blue,
+        backgroundColor: Colors.lime,
         // This makes the visual density adapt to the platform that you run
         // the app on. For desktop platforms, the controls will be smaller and
         // closer together (more dense) than on mobile platforms.
@@ -50,12 +52,40 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+class Palette {
+  static const Color screenColor = Color(0xffD1DFC2);
+  static const Color screenTextColor = Color(0xff041421);
+  static const Color bodyColor = Color.fromRGBO(0x48, 0x4b, 0x54, 1.0);
+  static const Color buttonColor = Color(0xff86898E);
+  static const Color buttonTextColor = Color(0xffEDEDF1);
+  static const Color calcModelColor = Color(0xffA5943F);
+}
+
+class Style {
+  static TextStyle textStyle =
+      GoogleFonts.basic(color: Palette.buttonTextColor);
+  static TextStyle brandStyle = textStyle.copyWith(fontSize: 28);
+  static TextStyle buttonTextStyle = textStyle.copyWith(fontSize: 32);
+  static TextStyle modelStyle =
+      textStyle.copyWith(color: Palette.calcModelColor, fontSize: 20);
+  static ButtonStyle buttonStyle = ElevatedButton.styleFrom(
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(10))),
+    // primary: Palette.buttonColor,
+    primary: Colors.blue,
+    padding: const EdgeInsets.all(30),
+    textStyle: Style.modelStyle,
+    shadowColor: Colors.black,
+    elevation: 100,
+  );
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   final Random _rand = Random(DateTime.now().millisecondsSinceEpoch);
 
-  String _buttonText = "Listen";
+  String _buttonText = "RECORD";
   bool _listening = false;
-  Color _qrColor = Colors.black;
+  Color _qrColor = Palette.screenTextColor;
   stt.SpeechToText speech = stt.SpeechToText();
   String _sentence = "";
 
@@ -65,7 +95,8 @@ class _MyHomePageState extends State<MyHomePage> {
     speech.initialize(onStatus: statusListener, onError: errorListener);
   }
 
-  void _buttonTapped() {
+  void _recordButtonTapped() {
+    dev.log("tapped");
     if (!_listening) {
       _startRecord();
     } else {
@@ -74,10 +105,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void statusListener(String status) {
-    dev.log(status);
     setState(() {
       _listening = status == 'listening';
-      _buttonText = _listening ? "Shhhhh!" : "Listen";
+      _buttonText = _listening ? "STOP" : "RECORD";
     });
   }
 
@@ -92,7 +122,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _startRecord() async {
     if (speech.isAvailable) {
-      speech.listen(onResult: resultListener, pauseFor: const Duration(seconds: 5));
+      speech.listen(
+          onResult: resultListener, pauseFor: const Duration(seconds: 5));
     }
   }
 
@@ -110,33 +141,80 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Palette.bodyColor,
       body: Center(
+        // heightFactor: 1.0,
         child: Column(
+          // mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-            FlatButton(
-              highlightColor: Colors.transparent,
-              splashColor: Colors.transparent,
-              onPressed: _tappedQR,
-              child: QrImage(
-                data: _sentence,
-                version: QrVersions.auto,
-                foregroundColor: _qrColor,
-                padding: const EdgeInsets.all(20),
-                // size: 300,
+          children: [
+            // BODY TEXT AREA
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("NONSENSE CORP", style: Style.brandStyle),
+                    Text("AI REAL-TIME SPEECH-TO-QR", style: Style.textStyle),
+                    Text("TRANSLATION COMPUTER SYSTEM", style: Style.textStyle),
+                  ],
+                ),
+                Text("QR-83 PLUS", style: Style.modelStyle),
+              ],
+            ),
+            // SCREEN AREA
+            Container(
+              color: Palette.screenColor,
+              margin: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SixteenSegmentDisplay(
+                    value: "QR CODE: RECORDING",
+                    size: 24,
+                  ),
+                  const Divider(
+                    color: Palette.screenTextColor,
+                    indent: 0.0,
+                    thickness: 2.0,
+                  ),
+                  TextButton(
+                    onPressed: _tappedQR,
+                    child: QrImage(
+                      data: _sentence,
+                      version: QrVersions.auto,
+                      foregroundColor: _qrColor,
+                      backgroundColor: Palette.screenColor,
+                      padding: const EdgeInsets.all(10),
+                      // size: 300,
+                    ),
+                  ),
+                ],
               ),
             ),
-            FlatButton(
-              color: Colors.blue,
-              textColor: Colors.white,
-              onPressed: _buttonTapped,
-              child: Text(
-                _buttonText,
-                textScaleFactor: 1.5,
-              ),
-              padding: const EdgeInsets.all(30),
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10))),
+            // BUTTON AREA
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  margin: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    style: Style.buttonStyle,
+                    onPressed: _recordButtonTapped,
+                    child: Text("SHARE", style: Style.buttonTextStyle),
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    style: Style.buttonStyle,
+                    onPressed: _recordButtonTapped,
+                    child: Text(_buttonText, style: Style.buttonTextStyle),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
