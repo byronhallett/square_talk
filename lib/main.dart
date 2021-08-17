@@ -62,11 +62,11 @@ class Palette {
 
 class Style {
   static TextStyle textStyle =
-      GoogleFonts.basic(color: Palette.buttonTextColor);
+  GoogleFonts.basic(color: Palette.buttonTextColor);
   static TextStyle brandStyle = textStyle.copyWith(fontSize: 28);
   static TextStyle buttonTextStyle = textStyle.copyWith(fontSize: 32);
   static TextStyle modelStyle =
-      textStyle.copyWith(color: Palette.calcModelColor, fontSize: 20);
+  textStyle.copyWith(color: Palette.calcModelColor, fontSize: 20);
   static ButtonStyle buttonStyle = ElevatedButton.styleFrom(
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(10))),
@@ -81,10 +81,12 @@ class Style {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final Random _rand = Random(DateTime.now().millisecondsSinceEpoch);
+  final Random _rand = Random(DateTime
+      .now()
+      .millisecondsSinceEpoch);
 
   String _buttonText = "RECORD";
-  String _screenText = "QR CODE: EMPTY";
+  String _screenText = "TAP RECORD :)";
   bool _listening = false;
   Color _qrColor = Palette.screenTextColor;
   stt.SpeechToText speech = stt.SpeechToText();
@@ -110,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _listening = status == 'listening';
       _buttonText = _listening ? "STOP" : "RECORD";
-      _screenText = _listening ? "QR CODE: RECORDING" : "QR CODE: READY";
+      _screenText = _listening ? "QR CODE: RECORDING" : "QR READY";
     });
   }
 
@@ -123,10 +125,24 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  //
+  // Future<void> vibrate() async {
+  //   bool has = await Vibration.hasVibrator() ?? false;
+  //   bool amp = await Vibration.hasAmplitudeControl() ?? false;
+  //   if (has) {
+  //     if (amp) {
+  //       Vibration.vibrate(amplitude: 64, duration: 300);
+  //     } else {
+  //       Vibration.vibrate(duration: 300);
+  //     }
+  //   }
+  // }
+
   Future<void> _startRecord() async {
     if (speech.isAvailable) {
       speech.listen(
-          onResult: resultListener, pauseFor: const Duration(seconds: 5));
+          onResult: resultListener, pauseFor: const Duration(seconds: 10));
+      // vibrate();
     }
   }
 
@@ -145,85 +161,84 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Palette.bodyColor,
-      body: Center(
-        // heightFactor: 1.0,
-        child: Column(
-          // mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            // BODY TEXT AREA
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("NONSENSE CORP", style: Style.brandStyle),
-                    Text("AI REAL-TIME SPEECH-TO-QR", style: Style.textStyle),
-                    Text("TRANSLATION COMPUTER SYSTEM", style: Style.textStyle),
-                  ],
-                ),
-                Text("QR-83 PLUS", style: Style.modelStyle),
-              ],
-            ),
-            // SCREEN AREA
-            Container(
-              color: Palette.screenColor,
-              margin: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+      body: Column(
+        // mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          // BODY TEXT AREA
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      _screenText,
-                      style: Style.screenTextStyle,
-                    ),
-                  ),
-                  const Divider(
-                    color: Palette.screenTextColor,
-                    indent: 0.0,
-                    thickness: 2.0,
-                  ),
-                  TextButton(
-                    onPressed: _tappedQR,
-                    child: QrImage(
-                      data: _sentence,
-                      version: QrVersions.auto,
-                      foregroundColor: _qrColor,
-                      backgroundColor: Palette.screenColor,
-                      padding: const EdgeInsets.all(10),
-                      // size: 300,
-                    ),
-                  ),
+                  Text("NONSENSE CORP", style: Style.brandStyle),
+                  Text("AI REAL-TIME SPEECH-TO-QR", style: Style.textStyle),
+                  Text("TRANSLATION COMPUTER SYSTEM", style: Style.textStyle),
                 ],
               ),
-            ),
-            // BUTTON AREA
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              Text("QR-83 PLUS", style: Style.modelStyle),
+            ],
+          ),
+          // SCREEN AREA
+          Container(
+            color: Palette.screenColor,
+            margin: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  margin: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    style: Style.buttonStyle,
-                    onPressed: _recordButtonTapped,
-                    child: Text("SHARE", style: Style.buttonTextStyle),
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    _screenText,
+                    style: Style.screenTextStyle,
                   ),
                 ),
-                Container(
-                  margin: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    style: Style.buttonStyle,
-                    onPressed: _recordButtonTapped,
-                    child: Text(_buttonText, style: Style.buttonTextStyle),
+                const Divider(
+                  color: Palette.screenTextColor,
+                  indent: 0.0,
+                  thickness: 2.0,
+                ),
+                TextButton(
+                  onPressed: _tappedQR,
+                  child: QrImage(
+                    data: _sentence,
+                    version: QrVersions.auto,
+                    foregroundColor: _qrColor,
+                    backgroundColor: Palette.screenColor,
+                    padding: const EdgeInsets.all(10),
+                    // size: 300,
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          // BUTTON AREA
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                margin: const EdgeInsets.all(8.0),
+                child: ElevatedButton(
+                  style: Style.buttonStyle,
+                  onPressed: () {},
+                  child: Text("SHARE", style: Style.buttonTextStyle),
+                ),
+              ),
+
+              Container(
+                margin: const EdgeInsets.all(10.0),
+                child: ElevatedButton(
+                  style: Style.buttonStyle,
+                  onPressed: _recordButtonTapped,
+                  onLongPress: _recordButtonTapped,
+                  child: Text(_buttonText, style: Style.buttonTextStyle),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
