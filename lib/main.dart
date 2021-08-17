@@ -7,7 +7,6 @@ import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fullscreen/fullscreen.dart';
-import 'package:segment_display/segment_display.dart';
 
 void main() {
   runApp(const MyApp());
@@ -71,19 +70,21 @@ class Style {
   static ButtonStyle buttonStyle = ElevatedButton.styleFrom(
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(10))),
-    // primary: Palette.buttonColor,
-    primary: Colors.blue,
+    primary: Palette.buttonColor,
     padding: const EdgeInsets.all(30),
     textStyle: Style.modelStyle,
     shadowColor: Colors.black,
     elevation: 100,
   );
+  static TextStyle screenTextStyle = const TextStyle(
+      fontSize: 28, fontFamily: "Segment", color: Palette.screenTextColor);
 }
 
 class _MyHomePageState extends State<MyHomePage> {
   final Random _rand = Random(DateTime.now().millisecondsSinceEpoch);
 
   String _buttonText = "RECORD";
+  String _screenText = "QR CODE: EMPTY";
   bool _listening = false;
   Color _qrColor = Palette.screenTextColor;
   stt.SpeechToText speech = stt.SpeechToText();
@@ -93,6 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     speech.initialize(onStatus: statusListener, onError: errorListener);
+    FullScreen.enterFullScreen(FullScreenMode.EMERSIVE);
   }
 
   void _recordButtonTapped() {
@@ -108,6 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _listening = status == 'listening';
       _buttonText = _listening ? "STOP" : "RECORD";
+      _screenText = _listening ? "QR CODE: RECORDING" : "QR CODE: READY";
     });
   }
 
@@ -171,9 +174,12 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SixteenSegmentDisplay(
-                    value: "QR CODE: RECORDING",
-                    size: 24,
+                  Container(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      _screenText,
+                      style: Style.screenTextStyle,
+                    ),
                   ),
                   const Divider(
                     color: Palette.screenTextColor,
