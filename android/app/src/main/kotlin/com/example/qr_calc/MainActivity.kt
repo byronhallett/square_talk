@@ -1,4 +1,4 @@
-package com.example.square_talk
+package com.example.qr_calc
 
 import io.flutter.embedding.android.FlutterActivity
 
