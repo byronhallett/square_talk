@@ -1,5 +1,7 @@
-import 'dart:developer' as dev;
+import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
@@ -7,6 +9,10 @@ import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fullscreen/fullscreen.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -58,36 +64,44 @@ class Palette {
   static const Color buttonColor = Color(0xff86898E);
   static const Color buttonTextColor = Color(0xffEDEDF1);
   static const Color calcModelColor = Color(0xffA5943F);
+  static const Color equalsButtonColor = Color(0xffD89D61);
 }
 
 class Style {
   static TextStyle textStyle =
-      GoogleFonts.basic(color: Palette.buttonTextColor);
+  GoogleFonts.basic(color: Palette.buttonTextColor);
   static TextStyle brandStyle = textStyle.copyWith(fontSize: 28);
-  static TextStyle buttonTextStyle = textStyle.copyWith(fontSize: 32);
+  static TextStyle buttonTextStyle = textStyle.copyWith(fontSize: 28);
   static TextStyle modelStyle =
-      textStyle.copyWith(color: Palette.calcModelColor, fontSize: 20);
+  textStyle.copyWith(color: Palette.calcModelColor, fontSize: 20);
   static ButtonStyle buttonStyle = ElevatedButton.styleFrom(
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(10))),
     primary: Palette.buttonColor,
-    padding: const EdgeInsets.all(30),
-    textStyle: Style.modelStyle,
+    padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 0),
     shadowColor: Colors.black,
-    elevation: 100,
+    elevation: 3,
   );
+  static ButtonStyle equalsButtonStyle = buttonStyle.copyWith(
+      backgroundColor: MaterialStateColor.resolveWith(
+              (states) => Palette.equalsButtonColor));
+  static ButtonStyle equalsButtonActiveStyle = buttonStyle.copyWith(
+      backgroundColor: MaterialStateColor.resolveWith(
+              (states) => Palette.equalsButtonColor.withOpacity(0.5)));
   static TextStyle screenTextStyle = const TextStyle(
       fontSize: 28, fontFamily: "Segment", color: Palette.screenTextColor);
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
-  final Random _rand = Random(DateTime.now().millisecondsSinceEpoch);
+  final Random _rand = Random(DateTime
+      .now()
+      .millisecondsSinceEpoch);
+  final stt.SpeechToText speech = stt.SpeechToText();
+  final ScreenshotController _screenshotController = ScreenshotController();
 
-  String _buttonText = "RECORD";
   String _screenText = "TAP RECORD :)";
   bool _listening = false;
   Color _qrColor = Palette.screenTextColor;
-  stt.SpeechToText speech = stt.SpeechToText();
   String _sentence = "";
 
   @override
@@ -120,10 +134,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   void _recordButtonTapped() {
-    dev.log("tapped");
     if (!_listening) {
       _startRecord();
-    } else {
+    }
+  }
+
+  void _stopButtonTapped() {
+    if (_listening) {
       _stopRecord();
     }
   }
@@ -131,7 +148,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void statusListener(String status) {
     setState(() {
       _listening = status == 'listening';
-      _buttonText = _listening ? "STOP" : "RECORD";
       _screenText = _listening ? "QR CODE: RECORDING" : "QR READY";
     });
   }
@@ -145,24 +161,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     });
   }
 
-  //
-  // Future<void> vibrate() async {
-  //   bool has = await Vibration.hasVibrator() ?? false;
-  //   bool amp = await Vibration.hasAmplitudeControl() ?? false;
-  //   if (has) {
-  //     if (amp) {
-  //       Vibration.vibrate(amplitude: 64, duration: 300);
-  //     } else {
-  //       Vibration.vibrate(duration: 300);
-  //     }
-  //   }
-  // }
-
   Future<void> _startRecord() async {
     if (speech.isAvailable) {
       speech.listen(
           onResult: resultListener, pauseFor: const Duration(seconds: 10));
-      // vibrate();
     }
   }
 
@@ -177,9 +179,24 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     });
   }
 
+  // IMAGE CAPTURE (SAVE FEATURE)
+  Future<void> _saveQR() async {
+    await _screenshotController.capture(delay: const Duration(milliseconds: 10)).then((Uint8List? image) async {
+      if (image != null) {
+        final directory = await getApplicationDocumentsDirectory(); // path_provider plugin
+        final imagePath = await File('${directory.path}/image.png').create(); // dart:io
+        await imagePath.writeAsBytes(image);
+        await Share.shareFiles([imagePath.path]); // share plugin
+      }
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Screenshot(
+      controller: _screenshotController,
+      child: Scaffold(
       backgroundColor: Palette.bodyColor,
       body: Column(
         // mainAxisSize: MainAxisSize.min,
@@ -225,8 +242,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   indent: 0.0,
                   thickness: 2.0,
                 ),
-                TextButton(
-                  onPressed: _tappedQR,
+                GestureDetector(
+                  onTap: _tappedQR,
                   child: QrImage(
                     data: _sentence,
                     version: QrVersions.auto,
@@ -240,30 +257,50 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             ),
           ),
           // BUTTON AREA
-          Row(
+          Flex(
+            direction: Axis.horizontal,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                margin: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  style: Style.buttonStyle,
-                  onPressed: () {},
-                  child: Text("SHARE", style: Style.buttonTextStyle),
+              Expanded(
+                flex: 4,
+                child: Container(
+                  margin: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    style: Style.buttonStyle,
+                    onPressed: _saveQR,
+                    child: Text("SAVE", style: Style.buttonTextStyle),
+                  ),
                 ),
               ),
-              Container(
-                margin: const EdgeInsets.all(10.0),
-                child: ElevatedButton(
-                  style: Style.buttonStyle,
-                  onPressed: _recordButtonTapped,
-                  onLongPress: _recordButtonTapped,
-                  child: Text(_buttonText, style: Style.buttonTextStyle),
+              Expanded(
+                flex: 5,
+                child: Container(
+                  margin: const EdgeInsets.all(4.0),
+                  child: ElevatedButton(
+                    style: _listening ? Style.equalsButtonActiveStyle : Style
+                        .equalsButtonStyle,
+                    onPressed: _recordButtonTapped,
+                    onLongPress: _recordButtonTapped,
+                    child: Text("RECORD", style: Style.buttonTextStyle),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: Container(
+                  margin: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    style: Style.buttonStyle,
+                    onPressed: _stopButtonTapped,
+                    child: Text("STOP", style: Style.buttonTextStyle),
+                  ),
                 ),
               ),
             ],
           ),
         ],
       ),
+    ),
     );
   }
 }
