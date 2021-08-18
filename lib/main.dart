@@ -62,11 +62,11 @@ class Palette {
 
 class Style {
   static TextStyle textStyle =
-  GoogleFonts.basic(color: Palette.buttonTextColor);
+      GoogleFonts.basic(color: Palette.buttonTextColor);
   static TextStyle brandStyle = textStyle.copyWith(fontSize: 28);
   static TextStyle buttonTextStyle = textStyle.copyWith(fontSize: 32);
   static TextStyle modelStyle =
-  textStyle.copyWith(color: Palette.calcModelColor, fontSize: 20);
+      textStyle.copyWith(color: Palette.calcModelColor, fontSize: 20);
   static ButtonStyle buttonStyle = ElevatedButton.styleFrom(
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(10))),
@@ -80,10 +80,8 @@ class Style {
       fontSize: 28, fontFamily: "Segment", color: Palette.screenTextColor);
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  final Random _rand = Random(DateTime
-      .now()
-      .millisecondsSinceEpoch);
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
+  final Random _rand = Random(DateTime.now().millisecondsSinceEpoch);
 
   String _buttonText = "RECORD";
   String _screenText = "TAP RECORD :)";
@@ -95,8 +93,30 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance?.addObserver(this);
     speech.initialize(onStatus: statusListener, onError: errorListener);
     FullScreen.enterFullScreen(FullScreenMode.EMERSIVE);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance?.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        FullScreen.enterFullScreen(FullScreenMode.EMERSIVE);
+        break;
+      case AppLifecycleState.inactive:
+        break;
+      case AppLifecycleState.paused:
+        break;
+      case AppLifecycleState.detached:
+        break;
+    }
   }
 
   void _recordButtonTapped() {
@@ -165,25 +185,30 @@ class _MyHomePageState extends State<MyHomePage> {
         // mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          // BODY TEXT AREA
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("NONSENSE CORP", style: Style.brandStyle),
-                  Text("AI REAL-TIME SPEECH-TO-QR", style: Style.textStyle),
-                  Text("TRANSLATION COMPUTER SYSTEM", style: Style.textStyle),
-                ],
-              ),
-              Text("QR-83 PLUS", style: Style.modelStyle),
-            ],
+          // TITLE TEXT AREA
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("NONSENSE CORP", style: Style.brandStyle),
+                    Text("AI REAL-TIME SPEECH-TO-QR", style: Style.textStyle),
+                    Text("TRANSLATION COMPUTER SYSTEM", style: Style.textStyle),
+                  ],
+                ),
+                Text("QR-83 PLUS", style: Style.modelStyle),
+              ],
+            ),
           ),
           // SCREEN AREA
           Container(
-            color: Palette.screenColor,
+            decoration: const BoxDecoration(
+                color: Palette.screenColor,
+                borderRadius: BorderRadius.all(Radius.circular(8.0))),
             margin: const EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -226,7 +251,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Text("SHARE", style: Style.buttonTextStyle),
                 ),
               ),
-
               Container(
                 margin: const EdgeInsets.all(10.0),
                 child: ElevatedButton(
