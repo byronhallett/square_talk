@@ -3,16 +3,15 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_fonts/google_fonts.dart';
-import 'package:fullscreen/fullscreen.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
-
 
 void main() {
   runApp(const MyApp());
@@ -69,11 +68,11 @@ class Palette {
 
 class Style {
   static TextStyle textStyle =
-  GoogleFonts.basic(color: Palette.buttonTextColor);
+      GoogleFonts.basic(color: Palette.buttonTextColor);
   static TextStyle brandStyle = textStyle.copyWith(fontSize: 28);
   static TextStyle buttonTextStyle = textStyle.copyWith(fontSize: 28);
   static TextStyle modelStyle =
-  textStyle.copyWith(color: Palette.calcModelColor, fontSize: 20);
+      textStyle.copyWith(color: Palette.calcModelColor, fontSize: 20);
   static ButtonStyle buttonStyle = ElevatedButton.styleFrom(
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(10))),
@@ -84,18 +83,16 @@ class Style {
   );
   static ButtonStyle equalsButtonStyle = buttonStyle.copyWith(
       backgroundColor: MaterialStateColor.resolveWith(
-              (states) => Palette.equalsButtonColor));
+          (states) => Palette.equalsButtonColor));
   static ButtonStyle equalsButtonActiveStyle = buttonStyle.copyWith(
       backgroundColor: MaterialStateColor.resolveWith(
-              (states) => Palette.equalsButtonColor.withOpacity(0.5)));
+          (states) => Palette.equalsButtonColor.withOpacity(0.5)));
   static TextStyle screenTextStyle = const TextStyle(
       fontSize: 28, fontFamily: "Segment", color: Palette.screenTextColor);
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
-  final Random _rand = Random(DateTime
-      .now()
-      .millisecondsSinceEpoch);
+  final Random _rand = Random(DateTime.now().millisecondsSinceEpoch);
   final stt.SpeechToText speech = stt.SpeechToText();
   final ScreenshotController _screenshotController = ScreenshotController();
 
@@ -109,29 +106,28 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance?.addObserver(this);
     speech.initialize(onStatus: statusListener, onError: errorListener);
-    FullScreen.enterFullScreen(FullScreenMode.EMERSIVE);
+    // SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance?.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    switch (state) {
-      case AppLifecycleState.resumed:
-        FullScreen.enterFullScreen(FullScreenMode.EMERSIVE);
-        break;
-      case AppLifecycleState.inactive:
-        break;
-      case AppLifecycleState.paused:
-        break;
-      case AppLifecycleState.detached:
-        break;
-    }
-  }
+  // @override
+  // void dispose() {
+  //   WidgetsBinding.instance?.removeObserver(this);
+  //   super.dispose();
+  // }
+  //
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   switch (state) {
+  //     case AppLifecycleState.resumed:
+  //       break;
+  //     case AppLifecycleState.inactive:
+  //       break;
+  //     case AppLifecycleState.paused:
+  //       break;
+  //     case AppLifecycleState.detached:
+  //       break;
+  //   }
+  // }
 
   void _recordButtonTapped() {
     if (!_listening) {
@@ -181,126 +177,132 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   // IMAGE CAPTURE (SAVE FEATURE)
   Future<void> _saveQR() async {
-    await _screenshotController.capture(delay: const Duration(milliseconds: 10)).then((Uint8List? image) async {
+    await _screenshotController
+        .capture(delay: const Duration(milliseconds: 10))
+        .then((Uint8List? image) async {
       if (image != null) {
-        final directory = await getApplicationDocumentsDirectory(); // path_provider plugin
-        final imagePath = await File('${directory.path}/image.png').create(); // dart:io
+        final directory =
+            await getApplicationDocumentsDirectory(); // path_provider plugin
+        final imagePath =
+            await File('${directory.path}/image.png').create(); // dart:io
         await imagePath.writeAsBytes(image);
         await Share.shareFiles([imagePath.path]); // share plugin
       }
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Screenshot(
       controller: _screenshotController,
       child: Scaffold(
-      backgroundColor: Palette.bodyColor,
-      body: Column(
-        // mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          // TITLE TEXT AREA
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
+        backgroundColor: Palette.bodyColor,
+        body: Column(
+          // mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            // TITLE TEXT AREA
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("NONSENSE CORP", style: Style.brandStyle),
+                      Text("AI REAL-TIME SPEECH-TO-QR", style: Style.textStyle),
+                      Text("TRANSLATION COMPUTER SYSTEM",
+                          style: Style.textStyle),
+                    ],
+                  ),
+                  Text("QR-83 PLUS", style: Style.modelStyle),
+                ],
+              ),
+            ),
+            // SCREEN AREA
+            Container(
+              decoration: const BoxDecoration(
+                  color: Palette.screenColor,
+                  borderRadius: BorderRadius.all(Radius.circular(8.0))),
+              margin: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      _screenText,
+                      style: Style.screenTextStyle,
+                    ),
+                  ),
+                  const Divider(
+                    color: Palette.screenTextColor,
+                    indent: 0.0,
+                    thickness: 2.0,
+                  ),
+                  GestureDetector(
+                    onTap: _tappedQR,
+                    child: QrImage(
+                      data: _sentence,
+                      version: QrVersions.auto,
+                      foregroundColor: _qrColor,
+                      backgroundColor: Palette.screenColor,
+                      padding: const EdgeInsets.all(10),
+                      // size: 300,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // BUTTON AREA
+            Flex(
+              direction: Axis.horizontal,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("NONSENSE CORP", style: Style.brandStyle),
-                    Text("AI REAL-TIME SPEECH-TO-QR", style: Style.textStyle),
-                    Text("TRANSLATION COMPUTER SYSTEM", style: Style.textStyle),
-                  ],
+                Expanded(
+                  flex: 4,
+                  child: Container(
+                    margin: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                      style: Style.buttonStyle,
+                      onPressed: _saveQR,
+                      child: Text("SAVE", style: Style.buttonTextStyle),
+                    ),
+                  ),
                 ),
-                Text("QR-83 PLUS", style: Style.modelStyle),
+                Expanded(
+                  flex: 5,
+                  child: Container(
+                    margin: const EdgeInsets.all(4.0),
+                    child: ElevatedButton(
+                      style: _listening
+                          ? Style.equalsButtonActiveStyle
+                          : Style.equalsButtonStyle,
+                      onPressed: _recordButtonTapped,
+                      onLongPress: _recordButtonTapped,
+                      child: Text("RECORD", style: Style.buttonTextStyle),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 4,
+                  child: Container(
+                    margin: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                      style: Style.buttonStyle,
+                      onPressed: _stopButtonTapped,
+                      child: Text("STOP", style: Style.buttonTextStyle),
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
-          // SCREEN AREA
-          Container(
-            decoration: const BoxDecoration(
-                color: Palette.screenColor,
-                borderRadius: BorderRadius.all(Radius.circular(8.0))),
-            margin: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    _screenText,
-                    style: Style.screenTextStyle,
-                  ),
-                ),
-                const Divider(
-                  color: Palette.screenTextColor,
-                  indent: 0.0,
-                  thickness: 2.0,
-                ),
-                GestureDetector(
-                  onTap: _tappedQR,
-                  child: QrImage(
-                    data: _sentence,
-                    version: QrVersions.auto,
-                    foregroundColor: _qrColor,
-                    backgroundColor: Palette.screenColor,
-                    padding: const EdgeInsets.all(10),
-                    // size: 300,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // BUTTON AREA
-          Flex(
-            direction: Axis.horizontal,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 4,
-                child: Container(
-                  margin: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    style: Style.buttonStyle,
-                    onPressed: _saveQR,
-                    child: Text("SAVE", style: Style.buttonTextStyle),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 5,
-                child: Container(
-                  margin: const EdgeInsets.all(4.0),
-                  child: ElevatedButton(
-                    style: _listening ? Style.equalsButtonActiveStyle : Style
-                        .equalsButtonStyle,
-                    onPressed: _recordButtonTapped,
-                    onLongPress: _recordButtonTapped,
-                    child: Text("RECORD", style: Style.buttonTextStyle),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 4,
-                child: Container(
-                  margin: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    style: Style.buttonStyle,
-                    onPressed: _stopButtonTapped,
-                    child: Text("STOP", style: Style.buttonTextStyle),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 }
